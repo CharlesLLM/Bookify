@@ -4,13 +4,25 @@ import {
   timingSafeEqual,
 } from 'node:crypto';
 import { promisify } from 'node:util';
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { LoginUserDto } from './user/dto/login-user.dto';
 import { PrismaService } from './prisma.service';
 import { RegisterUserDto } from './user/dto/register-user.dto';
 
 const scrypt = promisify(scryptCallback);
 
 type RegisterUserResponse = {
+  id: string;
+  email: string;
+  alias: string | null;
+  createdAt: Date;
+};
+
+type LoginUserResponse = {
   id: string;
   email: string;
   alias: string | null;
@@ -48,6 +60,40 @@ export class UserService {
     });
 
     return user;
+  }
+
+  async login(dto: LoginUserDto): Promise<LoginUserResponse> {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        id: true,
+        email: true,
+        alias: true,
+        createdAt: true,
+        passwordHash: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isValidPassword = await this.verifyPassword(
+      dto.password,
+      user.passwordHash,
+    );
+
+    if (!isValidPassword) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      alias: user.alias,
+      createdAt: user.createdAt,
+    };
   }
 
   private async hashPassword(password: string): Promise<string> {
