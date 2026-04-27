@@ -48,7 +48,7 @@ model Book {
   id          String     @id @default(uuid())
   title       String  
   author      String  
-  isbn        String?    @unique
+  isbn        String     @unique
   summary     String?  
   tags        String[]   @default([])
   createdAt   DateTime   @default(now())

@@ -21,8 +21,7 @@ export class CreateBookDto {
     example: '978-3-16-148410-0',
   })
   @IsString()
-  @IsOptional()
-  isbn?: string;
+  isbn: string;
 
   @ApiProperty({
     description: 'A brief summary of the book',

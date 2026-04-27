@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
@@ -23,5 +23,13 @@ export class BookController {
     const response = await this.bookService.attach(dto, userId);
 
     return `Book ${response.bookTitle} (ISBN: ${response.bookIsbn}) has been attached to user ${response.userAlias}.`;
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('my-books')
+  async myBooks(@Req() req) {
+    const userId = req.user.sub;
+
+    return await this.bookService.getUserBooks(userId);
   }
 }

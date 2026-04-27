@@ -1,18 +1,28 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
 
 type CreateBookResponse = {
   title: string;
-  isbn: string | null;
+  isbn: string;
 };
 
 type AttachBookResponse = {
   userAlias: string;
   bookTitle: string;
-  bookIsbn: string | null;
+  bookIsbn: string;
 };
+
+type GetUserBooksResponse = {
+  title: string;
+  author: string;
+  isbn: string;
+}[];
 
 @Injectable()
 export class BookService {
@@ -78,5 +88,20 @@ export class BookService {
       bookTitle: book.title,
       bookIsbn: book.isbn,
     };
+  }
+
+  async getUserBooks(userId: string): Promise<GetUserBooksResponse> {
+    const userBooks = await this.prisma.userBook.findMany({
+      where: { userId },
+      include: {
+        book: true,
+      },
+    });
+
+    return userBooks.map((entry) => ({
+      title: entry.book.title,
+      author: entry.book.author,
+      isbn: entry.book.isbn,
+    }));
   }
 }
