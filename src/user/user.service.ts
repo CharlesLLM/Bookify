@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -9,6 +10,8 @@ import * as bcrypt from 'bcrypt';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
+import { EmailService } from 'src/email/email.service';
+import { randomBytes, createHash } from 'crypto';
 
 type AuthResponse = {
   access_token: string;
@@ -19,6 +22,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(createDto: CreateUserDto) {
@@ -44,7 +48,7 @@ export class UserService {
     return user;
   }
 
-  async register(registerDto: RegisterUserDto): Promise<AuthResponse> {
+  async register(registerDto: RegisterUserDto) {
     const normalizedEmail = registerDto.email.toLowerCase().trim();
     const existingUser = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -60,16 +64,27 @@ export class UserService {
         email: normalizedEmail,
         passwordHash: await bcrypt.hash(registerDto.password, 10),
         alias: registerDto.alias.trim(),
+        isVerified: false,
       },
     });
 
-    // TODO : Send verification email and generate token in another route
+    const rawToken = randomBytes(32).toString('hex');
+
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
+    await this.prisma.verificationToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+      },
+    });
+
+    await this.emailService.sendVerificationEmail(user.email, rawToken);
 
     const payload = { sub: user.id, email: user.email };
 
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    return { message: 'Check your inbox for a verification email.' };
   }
 
   async login(loginDto: LoginUserDto): Promise<AuthResponse> {
@@ -82,6 +97,7 @@ export class UserService {
         alias: true,
         createdAt: true,
         passwordHash: true,
+        isVerified: true,
       },
     });
 
@@ -98,10 +114,41 @@ export class UserService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Email not verified');
+    }
+
     const payload = { sub: user.id, email: user.email };
 
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async verifyEmail(token: string) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    const record = await this.prisma.verificationToken.findFirst({
+      where: { tokenHash },
+    });
+
+    if (!record) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    if (record.expiresAt < new Date()) {
+      throw new BadRequestException('Token expired');
+    }
+
+    await this.prisma.user.update({
+      where: { id: record.userId },
+      data: { isVerified: true },
+    });
+
+    await this.prisma.verificationToken.delete({
+      where: { id: record.id },
+    });
+
+    return { message: 'Email verified successfully' };
   }
 }
