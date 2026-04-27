@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -28,7 +29,18 @@ type GetUserBooksResponse = {
 export class BookService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createBookDto: CreateBookDto): Promise<CreateBookResponse> {
+  async create(
+    createBookDto: CreateBookDto,
+    userId: string,
+  ): Promise<CreateBookResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.roles.includes('admin')) {
+      throw new ForbiddenException('Forbidden');
+    }
+
     const book = await this.prisma.book.create({
       data: createBookDto,
     });
