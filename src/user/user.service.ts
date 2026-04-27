@@ -35,9 +35,11 @@ export class UserService {
       data: {
         email: normalizedEmail,
         passwordHash: await bcrypt.hash(registerDto.password, 10),
-        alias: registerDto.alias?.trim() || null,
+        alias: registerDto.alias.trim(),
       },
     });
+
+    // TODO : Send verification email and generate token in another route
 
     const token = await this.jwtService.signAsync({
       sub: user.id,

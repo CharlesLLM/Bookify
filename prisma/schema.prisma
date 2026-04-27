@@ -16,7 +16,7 @@ model User {
   id                String   @id @default(uuid())
   email             String   @unique
   passwordHash      String
-  alias             String?
+  alias             String   @unique
   isVerified        Boolean  @default(false)
   roles             String[] @default(["user"])
   twoFactorEnabled  Boolean  @default(true)

@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsOptional,
   IsString,
   Matches,
   MinLength,
@@ -35,9 +34,8 @@ export class RegisterUserDto {
     description: 'The alias of the user',
     example: 'JohnDoe',
   })
-  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  alias?: string;
+  alias: string;
 }
