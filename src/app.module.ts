@@ -1,9 +1,24 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { BookModule } from './book/book.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: { expiresIn: '1h' },
+      }),
+      inject: [ConfigService],
+    }),
+    UserModule,
+    BookModule,
+  ],
   providers: [JwtService],
 })
 export class AppModule {}

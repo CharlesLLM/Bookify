@@ -8,7 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class RegisterUserDto {
   @ApiProperty({
     description: 'The user email address',
     example: 'test@example.com',

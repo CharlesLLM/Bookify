@@ -22,9 +22,9 @@ model User {
   twoFactorEnabled  Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  books             Book[]
   VerificationToken VerificationToken?
   TwoFactorCode     TwoFactorCode?
+  books             UserBook[]
 }
 
 model VerificationToken {
@@ -45,15 +45,21 @@ model TwoFactorCode {
 }
 
 model Book {
-  id          String   @id @default(uuid())
-  ownerId     String
-  title       String
-  author      String
-  isbn        String?  @unique
-  summary     String?
-  tags        String[] @default([])
-  isPublic    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  owner       User     @relation(fields: [ownerId], references: [id])
+  id          String     @id @default(uuid())
+  title       String  
+  author      String  
+  isbn        String?    @unique
+  summary     String?  
+  tags        String[]   @default([])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  users       UserBook[]
+}
+
+model UserBook {
+  id     String @id @default(uuid())
+  userId String
+  bookId String
+  user   User   @relation(fields: [userId], references: [id])
+  book   Book   @relation(fields: [bookId], references: [id])
 }
