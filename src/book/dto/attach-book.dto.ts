@@ -8,11 +8,4 @@ export class AttachBookDto {
   })
   @IsString()
   isbn?: string;
-
-  @ApiProperty({
-    description: 'The alias of the user to attach the book to',
-    example: 'JohnDoe',
-  })
-  @IsString()
-  userAlias: string;
 }

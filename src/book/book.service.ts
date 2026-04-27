@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
@@ -29,23 +29,40 @@ export class BookService {
     };
   }
 
-  async attach(attachBookDto: AttachBookDto): Promise<AttachBookResponse> {
-    const { isbn, userAlias } = attachBookDto;
+  async attach(
+    attachBookDto: AttachBookDto,
+    userId: string,
+  ): Promise<AttachBookResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { isbn } = attachBookDto;
 
     const book = await this.prisma.book.findUnique({
       where: { isbn },
     });
 
     if (!book) {
-      throw new Error('Book not found');
+      throw new NotFoundException('Book not found');
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { alias: userAlias },
+    // check if the book has not already been attached to the user
+    const existingEntry = await this.prisma.userBook.findUnique({
+      where: {
+        userId_bookId: {
+          userId: user.id,
+          bookId: book.id,
+        },
+      },
     });
 
-    if (!user) {
-      throw new Error('User not found');
+    if (existingEntry) {
+      throw new ConflictException('Book already attached to user');
     }
 
     // Attach the book to the user

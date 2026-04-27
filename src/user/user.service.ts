@@ -41,13 +41,10 @@ export class UserService {
 
     // TODO : Send verification email and generate token in another route
 
-    const token = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-    });
+    const payload = { sub: user.id, email: user.email };
 
     return {
-      access_token: token,
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 
@@ -74,13 +71,10 @@ export class UserService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-    });
+    const payload = { sub: user.id, email: user.email };
 
     return {
-      access_token: token,
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 }
