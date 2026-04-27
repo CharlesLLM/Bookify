@@ -10,9 +10,12 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
+  @UseGuards(AuthGuard)
   @Post('new')
-  async new(@Body() dto: CreateBookDto) {
-    return this.bookService.create(dto);
+  async new(@Body() dto: CreateBookDto, @Req() req) {
+    const userId = req.user.sub;
+
+    return this.bookService.create(dto, userId);
   }
 
   @UseGuards(AuthGuard)
