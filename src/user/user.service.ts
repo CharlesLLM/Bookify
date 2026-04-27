@@ -17,6 +17,12 @@ type AuthResponse = {
   access_token: string;
 };
 
+type TwoFactorAuthResponse = {
+  requires2FA: boolean;
+  twoFactorCodeId: string;
+  message: string;
+};
+
 @Injectable()
 export class UserService {
   constructor(
@@ -42,6 +48,8 @@ export class UserService {
         passwordHash: await bcrypt.hash(createDto.password, 10),
         alias: createDto.alias.trim(),
         roles: createDto.roles?.map((r) => r.trim()) ?? ['user'],
+        isVerified: true,
+        twoFactorEnabled: false,
       },
     });
 
@@ -65,6 +73,7 @@ export class UserService {
         passwordHash: await bcrypt.hash(registerDto.password, 10),
         alias: registerDto.alias.trim(),
         isVerified: false,
+        twoFactorEnabled: false,
       },
     });
 
@@ -82,12 +91,12 @@ export class UserService {
 
     await this.emailService.sendVerificationEmail(user.email, rawToken);
 
-    const payload = { sub: user.id, email: user.email };
-
     return { message: 'Check your inbox for a verification email.' };
   }
 
-  async login(loginDto: LoginUserDto): Promise<AuthResponse> {
+  async login(
+    loginDto: LoginUserDto,
+  ): Promise<AuthResponse | TwoFactorAuthResponse> {
     const normalizedEmail = loginDto.email.toLowerCase().trim();
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -98,6 +107,7 @@ export class UserService {
         createdAt: true,
         passwordHash: true,
         isVerified: true,
+        twoFactorEnabled: true,
       },
     });
 
@@ -116,6 +126,41 @@ export class UserService {
 
     if (!user.isVerified) {
       throw new UnauthorizedException('Email not verified');
+    }
+
+    if (user.twoFactorEnabled) {
+      const otpMinValue = 100000;
+      const otpMaxValue = 900000;
+      const otp = Math.floor(
+        otpMinValue + Math.random() * otpMaxValue,
+      ).toString();
+      const hashedOtp = await bcrypt.hash(otp, 10);
+      const otpExpiryMilliseconds = 10 * 60 * 1000;
+      const expiresAt = new Date(Date.now() + otpExpiryMilliseconds);
+
+      const twoFactorCode = await this.prisma.twoFactorCode.upsert({
+        where: { userId: user.id },
+        update: {
+          codeHash: hashedOtp,
+          expiresAt: expiresAt,
+          attempts: 0,
+        },
+        create: {
+          userId: user.id,
+          codeHash: hashedOtp,
+          expiresAt: expiresAt,
+          attempts: 0,
+        },
+      });
+
+      await this.emailService.sendTwoFactorCode(user.email, otp);
+
+      return {
+        requires2FA: true,
+        twoFactorCodeId: twoFactorCode.id,
+        message:
+          'Two-factor authentication required. Check your email for the code.',
+      };
     }
 
     const payload = { sub: user.id, email: user.email };
@@ -150,5 +195,81 @@ export class UserService {
     });
 
     return { message: 'Email verified successfully' };
+  }
+
+  async verifyTwoFactorLogin(
+    twoFactorCodeId: string,
+    code: string,
+  ): Promise<AuthResponse> {
+    const twoFactorCodeRecord = await this.prisma.twoFactorCode.findUnique({
+      where: { id: twoFactorCodeId },
+    });
+
+    if (!twoFactorCodeRecord) {
+      throw new UnauthorizedException('2FA code not found or expired.');
+    }
+
+    if (twoFactorCodeRecord.expiresAt < new Date()) {
+      await this.prisma.twoFactorCode.delete({
+        where: { id: twoFactorCodeId },
+      });
+      throw new UnauthorizedException('2FA code expired.');
+    }
+
+    const maxOtpAttempts = 5;
+    if (twoFactorCodeRecord.attempts >= maxOtpAttempts) {
+      await this.prisma.twoFactorCode.delete({
+        where: { id: twoFactorCodeId },
+      });
+      throw new UnauthorizedException('Too many attempts.');
+    }
+
+    const isCodeValid = await bcrypt.compare(
+      code,
+      twoFactorCodeRecord.codeHash,
+    );
+
+    if (!isCodeValid) {
+      await this.prisma.twoFactorCode.update({
+        where: { id: twoFactorCodeId },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new UnauthorizedException('Invalid 2FA code.');
+    }
+
+    await this.prisma.twoFactorCode.delete({ where: { id: twoFactorCodeId } });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: twoFactorCodeRecord.userId },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const payload = { sub: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
+
+  async enableTwoFactor(userId: string): Promise<{ message: string }> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: true },
+    });
+    return { message: 'Two-factor authentication enabled successfully.' };
+  }
+
+  async disableTwoFactor(userId: string): Promise<{ message: string }> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: false },
+    });
+    await this.prisma.twoFactorCode.deleteMany({
+      where: { userId },
+    });
+    return { message: 'Two-factor authentication disabled successfully.' };
   }
 }

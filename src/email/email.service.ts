@@ -23,4 +23,17 @@ export class EmailService {
       `,
     });
   }
+
+  async sendTwoFactorCode(email: string, code: string) {
+    await this.transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: email,
+      subject: 'Your Two-Factor Authentication Code',
+      html: `
+        <h2>Two-Factor Authentication</h2>
+        <p>Your 2FA code is: ${code}</p>
+        <p>This code expires in 10 minutes.</p>
+      `,
+    });
+  }
 }
