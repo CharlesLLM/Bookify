@@ -33,6 +33,10 @@ npm run start:dev
 
 ## Testing
 
+### Running fixtures
+
+npm run seed
+
 ### Register
 
 ```bash

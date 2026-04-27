@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from './dto/create-user.dto';
 
 type AuthResponse = {
   access_token: string;
@@ -19,6 +20,29 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async create(createDto: CreateUserDto) {
+    const normalizedEmail = createDto.email.toLowerCase().trim();
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email is already registered');
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        passwordHash: await bcrypt.hash(createDto.password, 10),
+        alias: createDto.alias.trim(),
+        roles: createDto.roles?.map((r) => r.trim()) ?? ['user'],
+      },
+    });
+
+    return user;
+  }
 
   async register(registerDto: RegisterUserDto): Promise<AuthResponse> {
     const normalizedEmail = registerDto.email.toLowerCase().trim();
@@ -65,7 +89,10 @@ export class UserService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isValidPassword = await bcrypt.compare(loginDto.password, user.passwordHash);
+    const isValidPassword = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    );
 
     if (!isValidPassword) {
       throw new UnauthorizedException('Invalid email or password');
