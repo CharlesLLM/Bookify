@@ -38,7 +38,7 @@ export class BookService {
     });
 
     if (!user || !user.roles.includes('admin')) {
-      throw new ForbiddenException('User not found');
+      throw new ForbiddenException('Forbidden');
     }
 
     const book = await this.prisma.book.create({
