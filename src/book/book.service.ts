@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -7,6 +8,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 type CreateBookResponse = {
   title: string;
@@ -28,28 +30,6 @@ type GetUserBooksResponse = {
 @Injectable()
 export class BookService {
   constructor(private readonly prisma: PrismaService) {}
-
-  async create(
-    createBookDto: CreateBookDto,
-    userId: string,
-  ): Promise<CreateBookResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.roles.includes('admin')) {
-      throw new ForbiddenException('Forbidden');
-    }
-
-    const book = await this.prisma.book.create({
-      data: createBookDto,
-    });
-
-    return {
-      title: book.title,
-      isbn: book.isbn,
-    };
-  }
 
   async attach(
     attachBookDto: AttachBookDto,
@@ -115,5 +95,63 @@ export class BookService {
       author: entry.book.author,
       isbn: entry.book.isbn,
     }));
+  }
+
+  async create(
+    createBookDto: CreateBookDto,
+    userId: string,
+  ): Promise<CreateBookResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.roles.includes('admin')) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const book = await this.prisma.book.create({
+      data: createBookDto,
+    });
+
+    return {
+      title: book.title,
+      isbn: book.isbn,
+    };
+  }
+
+  async update(
+    updateBookDto: UpdateBookDto,
+    userId: string,
+  ): Promise<CreateBookResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.roles.includes('admin')) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const foundBook = await this.prisma.book.findUnique({
+      where: { isbn: updateBookDto.isbn },
+    });
+
+    if (!foundBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    // Keep only defined data
+    const data = Object.fromEntries(
+      Object.entries(updateBookDto).filter(([_, v]) => v !== undefined),
+    );
+
+    const book = await this.prisma.book.update({
+      where: { isbn: updateBookDto.isbn },
+      data,
+    });
+
+    return {
+      title: book.title,
+      isbn: book.isbn,
+    };
   }
 }
