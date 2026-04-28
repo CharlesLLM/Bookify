@@ -50,7 +50,6 @@ compose.override.yaml
 .tmp
 
 # Prisma
-prisma/migrations
 /generated/prisma
 
 # Runtime data

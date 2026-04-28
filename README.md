@@ -16,30 +16,10 @@ It will install all dependencies, init and seed the database, and start the appl
 
 ### Manual setup
 
-1. Install the dependencies:
-
-```bash
-npm install
-```
-
-2. Start the db container:
-
-```bash
-docker compose up -d
-```
-
-3. Create and migrate the database:
-
-```bash
-npx prisma generate
-npx prisma migrate dev
-```
-
-4. Start the application:
-
-```bash
-npm run start:dev
-```
+1. Install the dependencies: `npm install`
+2. Start the db container: `docker compose up -d`
+3. Create and migrate the database: `npx prisma generate && npx prisma migrate dev`
+4. Start the application: `npm run start:dev`
 
 ### Links
 
