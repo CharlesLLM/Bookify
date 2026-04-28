@@ -10,10 +10,10 @@ help:
 
 boot: install docker-up db start ## Boot the application from scratch
 
-docker-up: ## Start the Docker container
+docker-up: ## Start the Docker containers
 	$(COMPOSE) up -d
 
-docker-stop: ## Stop the Docker container
+docker-stop: ## Stop the Docker containers
 	$(COMPOSE) stop
 
 start: ## Start the application
@@ -30,3 +30,4 @@ install: ## Install dependencies
 db: ## Create and migrate the database
 	npx prisma generate
 	npx prisma migrate dev
+	npm run seed
