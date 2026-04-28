@@ -1,7 +1,5 @@
 import {
-  BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +7,8 @@ import { PrismaService } from '../prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { DeleteBookDto } from './dto/delete-book.dto';
 
 type CreateBookResponse = {
   title: string;
@@ -29,7 +29,10 @@ type GetUserBooksResponse = {
 
 @Injectable()
 export class BookService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authService: AuthService,
+  ) {}
 
   async attach(
     attachBookDto: AttachBookDto,
@@ -101,13 +104,7 @@ export class BookService {
     createBookDto: CreateBookDto,
     userId: string,
   ): Promise<CreateBookResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.roles.includes('admin')) {
-      throw new ForbiddenException('Forbidden');
-    }
+    await this.authService.checkIsAdmin(userId);
 
     const book = await this.prisma.book.create({
       data: createBookDto,
@@ -123,13 +120,7 @@ export class BookService {
     updateBookDto: UpdateBookDto,
     userId: string,
   ): Promise<CreateBookResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.roles.includes('admin')) {
-      throw new ForbiddenException('Forbidden');
-    }
+    await this.authService.checkIsAdmin(userId);
 
     const foundBook = await this.prisma.book.findUnique({
       where: { isbn: updateBookDto.isbn },
@@ -153,5 +144,22 @@ export class BookService {
       title: book.title,
       isbn: book.isbn,
     };
+  }
+
+  async delete(deleteBookDto: DeleteBookDto, userId: string): Promise<void> {
+    await this.authService.checkIsAdmin(userId);
+
+    const { isbn } = deleteBookDto;
+    const foundBook = await this.prisma.book.findUnique({
+      where: { isbn },
+    });
+
+    if (!foundBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    await this.prisma.book.delete({
+      where: { isbn },
+    });
   }
 }

@@ -2,7 +2,7 @@
 
 Bookify is a book management application built with NestJS.
 As a visitor, you can register, login and manage books you own.
-As an admin, you can also create books.
+As an admin, you can also create, update, and delete books.
 
 ## Installation and setup
 
@@ -46,6 +46,7 @@ npm run start:dev
 - App : [http://localhost:3000](http://localhost:3000)
 - Swagger : [http://localhost:3000/api](http://localhost:3000/api)
 - Mailhog : [http://localhost:8025](http://localhost:8025)
+- Database : [http://localhost:51212](http://localhost:51212) (requires `npx prisma studio`)
 
 ## App flows
 

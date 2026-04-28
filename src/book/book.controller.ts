@@ -2,9 +2,10 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
-import { AuthGuard } from 'src/user/auth-guard';
+import { AuthGuard } from 'src/auth/auth-guard';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { DeleteBookDto } from './dto/delete-book.dto';
 
 @Controller('books')
 @ApiBearerAuth()
@@ -46,5 +47,18 @@ export class BookController {
   @Post('update')
   async update(@Body() dto: UpdateBookDto, @Req() req) {
     return this.bookService.update(dto, req.user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Delete an existing book by ISBN.',
+  })
+  @ApiResponse({ status: 200, description: 'Book deleted successfully.' })
+  @ApiResponse({ status: 400, description: 'ISBN is required.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Book not found.' })
+  @Post('delete')
+  async delete(@Body() dto: DeleteBookDto, @Req() req) {
+    return this.bookService.delete(dto, req.user.sub);
   }
 }

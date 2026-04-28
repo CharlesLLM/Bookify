@@ -11,7 +11,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { VerifyTwoFactorDto } from './dto/verify-two-factor.dto';
-import { AuthGuard } from './auth-guard';
+import { AuthGuard } from '../auth/auth-guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
