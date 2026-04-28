@@ -12,6 +12,7 @@ import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { VerifyTwoFactorDto } from './dto/verify-two-factor.dto';
 import { AuthGuard } from './auth-guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
 export class UserController {
@@ -29,16 +30,18 @@ export class UserController {
 
   @Post('2fa/verify')
   async verifyTwoFactor(@Body() dto: VerifyTwoFactorDto) {
-    return this.userService.verifyTwoFactorLogin(dto.twoFactorCodeId, dto.code);
+    return this.userService.verifyTwoFactorLogin(dto);
   }
 
   @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Post('2fa/enable')
   async enableTwoFactor(@Request() req) {
     return this.userService.enableTwoFactor(req.user.sub);
   }
 
   @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Post('2fa/disable')
   async disableTwoFactor(@Request() req) {
     return this.userService.disableTwoFactor(req.user.sub);

@@ -3,16 +3,16 @@ import { IsString, IsNotEmpty, IsNumberString } from 'class-validator';
 
 export class VerifyTwoFactorDto {
   @ApiProperty({
-    description: 'The id of the two-factor row in the db linked to user logging in',
-    example: '123',
+    description: 'The email of the user logging in',
+    example: 'user@example.com',
   })
   @IsString()
   @IsNotEmpty()
-  twoFactorCodeId!: string;
+  userEmail!: string;
 
   @ApiProperty({
-    description: 'The code sent to the user\'s email',
-    example: '123',
+    description: 'The code sent to the user for 2FA verification',
+    example: '123456',
   })
   @IsNumberString()
   @IsNotEmpty()

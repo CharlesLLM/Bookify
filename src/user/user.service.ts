@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { EmailService } from 'src/email/email.service';
 import { randomBytes, createHash } from 'crypto';
+import { VerifyTwoFactorDto } from './dto/verify-two-factor.dto';
 
 type AuthResponse = {
   access_token: string;
@@ -19,7 +20,6 @@ type AuthResponse = {
 
 type TwoFactorAuthResponse = {
   requires2FA: boolean;
-  twoFactorCodeId: string;
   message: string;
 };
 
@@ -138,7 +138,7 @@ export class UserService {
       const otpExpiryMilliseconds = 10 * 60 * 1000;
       const expiresAt = new Date(Date.now() + otpExpiryMilliseconds);
 
-      const twoFactorCode = await this.prisma.twoFactorCode.upsert({
+      await this.prisma.twoFactorCode.upsert({
         where: { userId: user.id },
         update: {
           codeHash: hashedOtp,
@@ -157,7 +157,6 @@ export class UserService {
 
       return {
         requires2FA: true,
-        twoFactorCodeId: twoFactorCode.id,
         message:
           'Two-factor authentication required. Check your email for the code.',
       };
@@ -198,11 +197,21 @@ export class UserService {
   }
 
   async verifyTwoFactorLogin(
-    twoFactorCodeId: string,
-    code: string,
+    verifyTwoFactorDto: VerifyTwoFactorDto,
   ): Promise<AuthResponse> {
+    const { userEmail, code } = verifyTwoFactorDto;
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: userEmail },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
     const twoFactorCodeRecord = await this.prisma.twoFactorCode.findUnique({
-      where: { id: twoFactorCodeId },
+      where: { userId: user.id },
     });
 
     if (!twoFactorCodeRecord) {
@@ -211,7 +220,7 @@ export class UserService {
 
     if (twoFactorCodeRecord.expiresAt < new Date()) {
       await this.prisma.twoFactorCode.delete({
-        where: { id: twoFactorCodeId },
+        where: { userId: user.id },
       });
       throw new UnauthorizedException('2FA code expired.');
     }
@@ -219,7 +228,7 @@ export class UserService {
     const maxOtpAttempts = 5;
     if (twoFactorCodeRecord.attempts >= maxOtpAttempts) {
       await this.prisma.twoFactorCode.delete({
-        where: { id: twoFactorCodeId },
+        where: { userId: user.id },
       });
       throw new UnauthorizedException('Too many attempts.');
     }
@@ -231,24 +240,16 @@ export class UserService {
 
     if (!isCodeValid) {
       await this.prisma.twoFactorCode.update({
-        where: { id: twoFactorCodeId },
+        where: { userId: user.id },
         data: { attempts: { increment: 1 } },
       });
       throw new UnauthorizedException('Invalid 2FA code.');
     }
 
-    await this.prisma.twoFactorCode.delete({ where: { id: twoFactorCodeId } });
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: twoFactorCodeRecord.userId },
-      select: { id: true, email: true },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
-    }
+    await this.prisma.twoFactorCode.delete({ where: { userId: user.id } });
 
     const payload = { sub: user.id, email: user.email };
+
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
