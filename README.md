@@ -67,9 +67,9 @@ Else, you will receive a 2FA email, which will give you a code to verify your em
 
 > For both, you have to be logged in by providing your JWT token in the POST request.
 
-To enable : `http://localhost:3000/users/2fa/enable`
+To enable : `http://localhost:3000/users/2fa/enable` ([Swagger](http://localhost:3000/api#/User/UserController_enableTwoFactor))
 
-To disable : `http://localhost:3000/users/2fa/disable`
+To disable : `http://localhost:3000/users/2fa/disable` ([Swagger](http://localhost:3000/api#/User/UserController_disableTwoFactor))
 
 ## Testing
 
