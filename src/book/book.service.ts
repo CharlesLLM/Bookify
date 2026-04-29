@@ -10,6 +10,15 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { DeleteBookDto } from './dto/delete-book.dto';
 
+type ListBooksResponse = {
+  title: string;
+  author: string;
+  isbn: string;
+  publishedYear: string;
+  summary: string | null;
+  tags: string[];
+}[];
+
 type CreateBookResponse = {
   title: string;
   isbn: string;
@@ -25,6 +34,7 @@ type GetUserBooksResponse = {
   title: string;
   author: string;
   isbn: string;
+  publishedYear: string;
 }[];
 
 @Injectable()
@@ -33,6 +43,21 @@ export class BookService {
     private readonly prisma: PrismaService,
     private readonly authService: AuthService,
   ) {}
+
+  async list(): Promise<ListBooksResponse> {
+    const books = await this.prisma.book.findMany({
+      select: {
+        title: true,
+        author: true,
+        isbn: true,
+        publishedYear: true,
+        summary: true,
+        tags: true,
+      },
+    });
+
+    return books;
+  }
 
   async attach(
     attachBookDto: AttachBookDto,
@@ -56,7 +81,7 @@ export class BookService {
       throw new NotFoundException('Book not found');
     }
 
-    // check if the book has not already been attached to the user
+    // Check if the book has not already been attached to the user
     const existingEntry = await this.prisma.userBook.findUnique({
       where: {
         userId_bookId: {
@@ -97,6 +122,7 @@ export class BookService {
       title: entry.book.title,
       author: entry.book.author,
       isbn: entry.book.isbn,
+      publishedYear: entry.book.publishedYear,
     }));
   }
 
@@ -165,10 +191,6 @@ export class BookService {
     if (!foundBook) {
       throw new NotFoundException('Book not found');
     }
-
-    await this.prisma.userBook.deleteMany({
-      where: { bookId: foundBook.id },
-    });
 
     await this.prisma.book.delete({
       where: { isbn },

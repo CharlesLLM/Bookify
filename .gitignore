@@ -50,7 +50,7 @@ compose.override.yaml
 .tmp
 
 # Prisma
-/generated/prisma
+**/generated/prisma
 
 # Runtime data
 pids

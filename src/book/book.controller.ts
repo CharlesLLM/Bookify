@@ -12,6 +12,11 @@ import { DeleteBookDto } from './dto/delete-book.dto';
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
+  @Get('')
+  async list() {
+    return await this.bookService.list();
+  }
+
   @UseGuards(AuthGuard)
   @Get('my-books')
   async myBooks(@Req() req) {
@@ -19,6 +24,10 @@ export class BookController {
   }
 
   @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary:
+      "Attach an existing book to the user's account, meaning the user owns it or has read it.",
+  })
   @Post('attach')
   async attach(@Body() dto: AttachBookDto, @Req() req) {
     const response = await this.bookService.attach(dto, req.user.sub);

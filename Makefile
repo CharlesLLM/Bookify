@@ -30,4 +30,4 @@ install: ## Install dependencies
 db: ## Create and migrate the database
 	npx prisma generate
 	npx prisma migrate dev
-	npm run seed
+	npx prisma db seed

@@ -5,7 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -13,15 +15,15 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(uuid())
-  email             String   @unique
+  id                String             @id @default(uuid())
+  email             String             @unique
   passwordHash      String
-  alias             String   @unique
-  isVerified        Boolean  @default(false)
-  roles             String[] @default(["user"])
-  twoFactorEnabled  Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  alias             String             @unique
+  isVerified        Boolean            @default(false)
+  roles             String[]           @default(["user"])
+  twoFactorEnabled  Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   VerificationToken VerificationToken?
   TwoFactorCode     TwoFactorCode?
   books             UserBook[]
@@ -45,23 +47,24 @@ model TwoFactorCode {
 }
 
 model Book {
-  id          String     @id @default(uuid())
-  title       String  
-  author      String  
-  isbn        String     @unique
-  summary     String?  
-  tags        String[]   @default([])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  users       UserBook[]
+  id            String     @id @default(uuid())
+  title         String  
+  author        String  
+  isbn          String     @unique
+  publishedYear String
+  summary       String?  
+  tags          String[]   @default([])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  users         UserBook[]
 }
 
 model UserBook {
   id     String @id @default(uuid())
   userId String
   bookId String
-  user   User   @relation(fields: [userId], references: [id])
-  book   Book   @relation(fields: [bookId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }
