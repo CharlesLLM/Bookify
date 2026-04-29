@@ -106,6 +106,14 @@ export class BookService {
   ): Promise<CreateBookResponse> {
     await this.authService.checkIsAdmin(userId);
 
+    const isbnExists = await this.prisma.book.findUnique({
+      where: { isbn: createBookDto.isbn },
+    });
+
+    if (isbnExists) {
+      throw new ConflictException('ISBN already exists');
+    }
+
     const book = await this.prisma.book.create({
       data: createBookDto,
     });
@@ -128,6 +136,14 @@ export class BookService {
 
     if (!foundBook) {
       throw new NotFoundException('Book not found');
+    }
+
+    const isbnExists = await this.prisma.book.findUnique({
+      where: { isbn: updateBookDto.isbn },
+    });
+
+    if (isbnExists) {
+      throw new ConflictException('ISBN already exists');
     }
 
     // Keep only defined data
@@ -157,6 +173,10 @@ export class BookService {
     if (!foundBook) {
       throw new NotFoundException('Book not found');
     }
+
+    await this.prisma.userBook.deleteMany({
+      where: { bookId: foundBook.id },
+    });
 
     await this.prisma.book.delete({
       where: { isbn },
