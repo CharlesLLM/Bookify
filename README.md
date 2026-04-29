@@ -16,44 +16,22 @@ It will install all dependencies, init and seed the database, and start the appl
 
 ### Manual setup
 
-1. Install the dependencies: `npm install`
-2. Start the db container: `docker compose up -d`
-3. Create and migrate the database: `npx prisma generate && npx prisma migrate dev`
-4. Start the application: `npm run start:dev`
+1. Copy the .env.example to .env `cp .env.example .env`
+2. Install the dependencies: `npm install`
+3. Start the db container: `docker compose up -d`
+4. Create and migrate the database: `npx prisma generate && npx prisma migrate dev`
+5. Start the application: `npm run start` (`npm run start:dev` for watch mode)
 
 ### Links
 
-- App : [http://localhost:3000](http://localhost:3000)
-- Swagger : [http://localhost:3000/api](http://localhost:3000/api)
-- Mailhog : [http://localhost:8025](http://localhost:8025)
-- Database : [http://localhost:51212](http://localhost:51212) (requires `npx prisma studio`)
-
-## App flows
-
-### Register process
-
-1. You first have to send a POST request to `http://localhost:3000/users/register` with your login data.
-2. Then you will receive a verification email, which will give you a link to verify your email address and give you a JWT token.
-
-### Login process
-
-Only users with verified emails can log in.
-You have to send a POST request to `http://localhost:3000/users/login` with your login data.
-
-If you don't have enabled 2FA, you will receive a JWT token if your credentials are valid.
-Else, you will receive a 2FA email, which will give you a code to verify your email address and give you a JWT token.
-
-### Enable/Disable 2FA
-
-> For both, you have to be logged in by providing your JWT token in the POST request.
-
-To enable : `http://localhost:3000/users/2fa/enable` ([Swagger](http://localhost:3000/api#/User/UserController_enableTwoFactor))
-
-To disable : `http://localhost:3000/users/2fa/disable` ([Swagger](http://localhost:3000/api#/User/UserController_disableTwoFactor))
+- App : [localhost:3000](http://localhost:3000)
+- Swagger : [localhost:3000/api](http://localhost:3000/api)
+- Mailhog : [localhost:8025](http://localhost:8025)
+- Database : [localhost:51212](http://localhost:51212) (requires to run `npx prisma studio`)
 
 ## Testing
 
-To test, you can access the Swagger at [http://localhost:3000/api](http://localhost:3000/api)
+To test, you can access the Swagger at [localhost:3000/api](http://localhost:3000/api)
 
 ### Users
 
@@ -63,6 +41,14 @@ To test, you can access the Swagger at [http://localhost:3000/api](http://localh
 | `user2@test.com`  | `User123`  | user  |
 | `admin1@test.com` | `Admin123` | admin |
 | `admin2@test.com` | `Admin123` | admin |
+
+### 2FA
+
+To enable or disable 2FA, you can use the following endpoints (need to be authenticated):
+
+To enable : `localhost:3000/users/2fa/enable` ([Swagger](http://localhost:3000/api#/User/UserController_enableTwoFactor))
+
+To disable : `localhost:3000/users/2fa/disable` ([Swagger](http://localhost:3000/api#/User/UserController_disableTwoFactor))
 
 ### Manual testing
 
