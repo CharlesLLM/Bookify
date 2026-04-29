@@ -25,6 +25,7 @@ type GetUserBooksResponse = {
   title: string;
   author: string;
   isbn: string;
+  publishedYear: number;
 }[];
 
 @Injectable()
@@ -56,7 +57,7 @@ export class BookService {
       throw new NotFoundException('Book not found');
     }
 
-    // check if the book has not already been attached to the user
+    // Check if the book has not already been attached to the user
     const existingEntry = await this.prisma.userBook.findUnique({
       where: {
         userId_bookId: {
@@ -97,6 +98,7 @@ export class BookService {
       title: entry.book.title,
       author: entry.book.author,
       isbn: entry.book.isbn,
+      publishedYear: entry.book.publishedYear,
     }));
   }
 
