@@ -63,8 +63,8 @@ model UserBook {
   id     String @id @default(uuid())
   userId String
   bookId String
-  user   User   @relation(fields: [userId], references: [id])
-  book   Book   @relation(fields: [bookId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }

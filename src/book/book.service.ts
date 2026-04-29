@@ -168,10 +168,6 @@ export class BookService {
       throw new NotFoundException('Book not found');
     }
 
-    await this.prisma.userBook.deleteMany({
-      where: { bookId: foundBook.id },
-    });
-
     await this.prisma.book.delete({
       where: { isbn },
     });
