@@ -138,14 +138,6 @@ export class BookService {
       throw new NotFoundException('Book not found');
     }
 
-    const isbnExists = await this.prisma.book.findUnique({
-      where: { isbn: updateBookDto.isbn },
-    });
-
-    if (isbnExists) {
-      throw new ConflictException('ISBN already exists');
-    }
-
     // Keep only defined data
     const data = Object.fromEntries(
       Object.entries(updateBookDto).filter(([_, v]) => v !== undefined),
