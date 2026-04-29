@@ -10,6 +10,15 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { DeleteBookDto } from './dto/delete-book.dto';
 
+type ListBooksResponse = {
+  title: string;
+  author: string;
+  isbn: string;
+  publishedYear: string;
+  summary: string | null;
+  tags: string[];
+}[];
+
 type CreateBookResponse = {
   title: string;
   isbn: string;
@@ -34,6 +43,21 @@ export class BookService {
     private readonly prisma: PrismaService,
     private readonly authService: AuthService,
   ) {}
+
+  async list(): Promise<ListBooksResponse> {
+    const books = await this.prisma.book.findMany({
+      select: {
+        title: true,
+        author: true,
+        isbn: true,
+        publishedYear: true,
+        summary: true,
+        tags: true,
+      },
+    });
+
+    return books;
+  }
 
   async attach(
     attachBookDto: AttachBookDto,
