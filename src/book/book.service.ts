@@ -25,7 +25,7 @@ type GetUserBooksResponse = {
   title: string;
   author: string;
   isbn: string;
-  publishedYear: number;
+  publishedYear: string;
 }[];
 
 @Injectable()

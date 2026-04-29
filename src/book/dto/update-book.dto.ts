@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumberString, IsOptional, IsString } from 'class-validator';
 
 export class UpdateBookDto {
   @ApiProperty({
@@ -29,9 +29,9 @@ export class UpdateBookDto {
     description: 'The published year of the book',
     example: 2001,
   })
-  @IsNumber()
+  @IsNumberString()
   @IsOptional()
-  publishedYear: number;
+  publishedYear: string;
 
   @ApiProperty({
     description: 'A brief summary of the book',

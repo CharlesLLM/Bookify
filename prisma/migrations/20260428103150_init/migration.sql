@@ -40,7 +40,7 @@ CREATE TABLE "Book" (
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "isbn" TEXT NOT NULL,
-    "publishedYear" INTEGER NOT NULL,
+    "publishedYear" TEXT NOT NULL,
     "summary" TEXT,
     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

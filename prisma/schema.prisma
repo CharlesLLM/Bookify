@@ -51,7 +51,7 @@ model Book {
   title         String  
   author        String  
   isbn          String     @unique
-  publishedYear Int
+  publishedYear String
   summary       String?  
   tags          String[]   @default([])
   createdAt     DateTime   @default(now())
