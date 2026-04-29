@@ -4,7 +4,6 @@ import { UserModule } from './user/user.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { BookModule } from './book/book.module';
 import { AuthModule } from './auth/auth.module';
-import { PrismaService } from './prisma.service';
 
 @Module({
   imports: [
@@ -22,6 +21,6 @@ import { PrismaService } from './prisma.service';
     UserModule,
     BookModule,
   ],
-  providers: [JwtService, PrismaService],
+  providers: [JwtService],
 })
 export class AppModule {}
