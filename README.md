@@ -55,6 +55,15 @@ To disable : `http://localhost:3000/users/2fa/disable` ([Swagger](http://localho
 
 To test, you can access the Swagger at [http://localhost:3000/api](http://localhost:3000/api)
 
+### Users
+
+| Email             | Password   | Roles |
+| ----------------- | ---------- | ----- |
+| `user1@test.com`  | `User123`  | user  |
+| `user2@test.com`  | `User123`  | user  |
+| `admin1@test.com` | `Admin123` | admin |
+| `admin2@test.com` | `Admin123` | admin |
+
 ### Manual testing
 
 You can also test manually with curl requests, like :
