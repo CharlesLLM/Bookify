@@ -8,7 +8,10 @@ help:
 
 ############################## BOOT #################################
 
-boot: install docker-up db start ## Boot the application from scratch
+boot: .env install docker-up db start ## Boot the application from scratch
+
+.env:
+	@cp .env.example .env
 
 docker-up: ## Start the Docker containers
 	$(COMPOSE) up -d
