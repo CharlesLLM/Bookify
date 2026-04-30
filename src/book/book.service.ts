@@ -151,13 +151,14 @@ export class BookService {
   }
 
   async update(
+    isbn: string,
     updateBookDto: UpdateBookDto,
     userId: string,
   ): Promise<CreateBookResponse> {
     await this.authService.checkIsAdmin(userId);
 
     const foundBook = await this.prisma.book.findUnique({
-      where: { isbn: updateBookDto.isbn },
+      where: { isbn },
     });
 
     if (!foundBook) {
@@ -170,7 +171,7 @@ export class BookService {
     );
 
     const book = await this.prisma.book.update({
-      where: { isbn: updateBookDto.isbn },
+      where: { isbn },
       data,
     });
 

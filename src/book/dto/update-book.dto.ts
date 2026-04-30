@@ -19,13 +19,6 @@ export class UpdateBookDto {
   author: string;
 
   @ApiProperty({
-    description: 'The ISBN of the book',
-    example: '978-3-16-148410-0',
-  })
-  @IsString()
-  isbn: string;
-
-  @ApiProperty({
     description: 'The published year of the book',
     example: 2001,
   })

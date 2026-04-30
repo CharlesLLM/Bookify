@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { AttachBookDto } from './dto/attach-book.dto';
@@ -45,17 +45,17 @@ export class BookController {
   }
 
   @UseGuards(AuthGuard)
-  @ApiOperation({
-    summary:
-      'Update an existing book. ISBN is required, but other fields are optional.',
-  })
   @ApiResponse({ status: 200, description: 'Book updated successfully.' })
   @ApiResponse({ status: 400, description: 'ISBN is required.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Book not found.' })
-  @Post('update')
-  async update(@Body() dto: UpdateBookDto, @Req() req) {
-    return this.bookService.update(dto, req.user.sub);
+  @Patch('update/:isbn')
+  async update(
+    @Param('isbn') isbn: string,
+    @Body() dto: UpdateBookDto,
+    @Req() req,
+  ) {
+    return this.bookService.update(isbn, dto, req.user.sub);
   }
 
   @UseGuards(AuthGuard)

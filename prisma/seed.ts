@@ -111,7 +111,7 @@ async function createUser(data: any) {
       passwordHash: await bcrypt.hash(data.password, 10),
       alias: data.alias,
       roles: data.roles,
-      isVerified: false,
+      isVerified: true,
       twoFactorEnabled: false,
     },
   });
